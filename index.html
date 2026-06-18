@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recruiting Funnel Calculator · Blinq Talent</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; color: #0f172a; }
+    input[type="range"] { accent-color: #4f46e5; cursor: pointer; width: 100%; height: 4px; }
+    input:focus { outline: none; }
+    button { font-family: inherit; cursor: pointer; }
+    .bar-fill { transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white; }
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useCallback } = React;
+
+// ─── Config ─────────────────────────────────────────────────────────────────
+
+const STAGE_CONFIG = [
+  { key: 'outboundMsgs', label: 'Outbound Messages',     icon: '📤', color: '#1e1b4b', source: 'outbound' },
+  { key: 'appsReviewed', label: 'Applications Reviewed', icon: '📋', color: '#312e81', source: 'apps'     },
+  { key: 'screens',      label: 'Recruiter Screens',     icon: '📞', color: '#3730a3'                     },
+  { key: 'tps',          label: 'Team Phone Screens',    icon: '👥', color: '#4338ca'                     },
+  { key: 'deepDives',    label: 'Deep Dives',            icon: '🔍', color: '#4f46e5'                     },
+  { key: 'finals',       label: 'Final Interviews',      icon: '⭐', color: '#6366f1'                     },
+  { key: 'hires',        label: 'Hires',                 icon: '🎉', color: '#818cf8'                     },
+];
+
+const RATE_CONFIG = [
+  { key: 'outboundToScreen', label: 'Outbound → Recruiter Screen',    bench: '8–15%',   tip: 'Response + qualification rate from outbound messages', source: 'outbound', min: 1, max: 50  },
+  { key: 'appToScreen',      label: 'Application → Recruiter Screen', bench: '15–30%',  tip: '% of reviewed applications that book a screen',         source: 'apps',     min: 1, max: 80  },
+  { key: 'screenToTps',      label: 'Screen → Team Phone Screen',     bench: '35–50%',  tip: '% of recruiter screens advancing to TPS',               min: 1, max: 100 },
+  { key: 'tpsToDeepDive',    label: 'TPS → Deep Dive',                bench: '40–60%',  tip: '% of TPS advancing to Deep Dive',                       min: 1, max: 100 },
+  { key: 'deepDiveToFinal',  label: 'Deep Dive → Final',              bench: '50–70%',  tip: '% of Deep Dives advancing to Final Interview',          min: 1, max: 100 },
+  { key: 'finalToOffer',     label: 'Final → Offer',                  bench: '50–75%',  tip: '% of Final Interviews resulting in an accepted offer',   min: 1, max: 100 },
+];
+
+const DEFAULT_RATES = { outboundToScreen: 10, appToScreen: 20, screenToTps: 40, tpsToDeepDive: 50, deepDiveToFinal: 60, finalToOffer: 65 };
+
+const makeRole = (id, name = 'New Role') => ({
+  id, name,
+  targetHires: 1,
+  sourceType: 'both',   // 'outbound' | 'apps' | 'both'
+  outboundSplit: 60,    // % of screens sourced via outbound (rest = inbound apps)
+  rates: { ...DEFAULT_RATES },
+});
+
+// ─── Calculator ──────────────────────────────────────────────────────────────
+
+function calcFunnel(role) {
+  const { targetHires, sourceType, outboundSplit, rates: r } = role;
+  const finals    = targetHires / (r.finalToOffer    / 100);
+  const deepDives = finals      / (r.deepDiveToFinal / 100);
+  const tps       = deepDives   / (r.tpsToDeepDive   / 100);
+  const screens   = tps         / (r.screenToTps     / 100);
+
+  const obFrac  = sourceType === 'outbound' ? 1 : sourceType === 'apps' ? 0 : outboundSplit / 100;
+  const appFrac = 1 - obFrac;
+
+  const obScreens  = screens * obFrac;
+  const appScreens = screens * appFrac;
+
+  return {
+    outboundMsgs: obFrac  > 0 ? Math.ceil(obScreens  / (r.outboundToScreen / 100)) : 0,
+    appsReviewed: appFrac > 0 ? Math.ceil(appScreens  / (r.appToScreen      / 100)) : 0,
+    screens:   Math.ceil(screens),
+    tps:       Math.ceil(tps),
+    deepDives: Math.ceil(deepDives),
+    finals:    Math.ceil(finals),
+    hires:     Math.ceil(targetHires),
+  };
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+const fmt = n => n.toLocaleString();
+
+function getVisibleStages(sourceType) {
+  return STAGE_CONFIG.filter(s => {
+    if (!s.source) return true;
+    return sourceType === 'both' || s.source === sourceType;
+  });
+}
+
+function getVisibleRates(sourceType) {
+  return RATE_CONFIG.filter(r => !r.source || r.source === sourceType || sourceType === 'both');
+}
+
+// ─── Sub-components ──────────────────────────────────────────────────────────
+
+function RateRow({ cfg, value, onChange }) {
+  return (
+    <div style={{ marginBottom: 18 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+        <span style={{ fontSize: 13, fontWeight: 500, color: '#374151' }}>{cfg.label}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 11, color: '#94a3b8', background: '#f1f5f9', padding: '2px 7px', borderRadius: 20 }}>
+            Bench: {cfg.bench}
+          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <input
+              type="number" min={cfg.min} max={cfg.max} value={value}
+              onChange={e => onChange(Math.min(cfg.max, Math.max(cfg.min, parseInt(e.target.value) || cfg.min)))}
+              style={{
+                width: 46, padding: '3px 4px', border: '1px solid #d1d5db',
+                borderRadius: 6, fontSize: 13, fontWeight: 700, color: '#4f46e5',
+                textAlign: 'center', background: '#f9fafb',
+              }}
+            />
+            <span style={{ fontSize: 13, color: '#9ca3af' }}>%</span>
+          </div>
+        </div>
+      </div>
+      <input type="range" min={cfg.min} max={cfg.max} value={value}
+        onChange={e => onChange(parseInt(e.target.value))} />
+      <p style={{ fontSize: 11, color: '#9ca3af', marginTop: 3 }}>{cfg.tip}</p>
+    </div>
+  );
+}
+
+function SummaryCard({ stage, value }) {
+  return (
+    <div style={{
+      background: 'white', borderRadius: 10, border: '1px solid #e2e8f0',
+      padding: '14px 12px', textAlign: 'center',
+    }}>
+      <div style={{ fontSize: 20, marginBottom: 4 }}>{stage.icon}</div>
+      <div style={{ fontSize: 26, fontWeight: 800, color: stage.color, lineHeight: 1.1 }}>{fmt(value)}</div>
+      <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4, lineHeight: 1.3 }}>{stage.label}</div>
+    </div>
+  );
+}
+
+function FunnelViz({ stages, funnel }) {
+  const maxVal = Math.max(...stages.map(s => funnel[s.key] || 0), 1);
+  return (
+    <div>
+      {stages.map(stage => {
+        const val = funnel[stage.key];
+        if (!val) return null;
+        const pct = Math.max((val / maxVal) * 100, 3);
+        return (
+          <div key={stage.key} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 9 }}>
+            <span style={{ fontSize: 15, width: 22, textAlign: 'center', flexShrink: 0 }}>{stage.icon}</span>
+            <span style={{ fontSize: 12, color: '#6b7280', width: 168, textAlign: 'right', flexShrink: 0 }}>
+              {stage.label}
+            </span>
+            <div style={{ flex: 1, background: '#f1f5f9', borderRadius: 8, height: 28, overflow: 'hidden' }}>
+              <div
+                className="bar-fill"
+                style={{
+                  width: `${pct}%`, height: '100%', background: stage.color,
+                  borderRadius: 8, display: 'flex', alignItems: 'center',
+                  justifyContent: 'flex-end', paddingRight: 10,
+                }}
+              >
+                <span style={{ color: 'white', fontSize: 12, fontWeight: 700 }}>{fmt(val)}</span>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── URL State ──────────────────────────────────────────────────────────────
+
+function encodeState(roles) {
+  try { return btoa(unescape(encodeURIComponent(JSON.stringify(roles)))); } catch(e) { return null; }
+}
+
+function decodeState(b64) {
+  try { return JSON.parse(decodeURIComponent(escape(atob(b64)))); } catch(e) { return null; }
+}
+
+function loadInitialRoles() {
+  const params = new URLSearchParams(window.location.search);
+  const s = params.get('state');
+  if (s) {
+    const loaded = decodeState(s);
+    if (loaded && Array.isArray(loaded) && loaded.length) return loaded;
+  }
+  return [makeRole('1', 'Senior Engineer')];
+}
+
+// ─── Main App ────────────────────────────────────────────────────────────────
+
+function App() {
+  const initRoles = loadInitialRoles();
+  const [roles, setRoles]       = useState(initRoles);
+  const [selectedId, setSelId]  = useState(initRoles[0].id);
+  const [nextId, setNextId]     = useState(initRoles.length + 1);
+  const [copied, setCopied]     = useState(false);
+
+  const role   = roles.find(r => r.id === selectedId) || roles[0];
+  const funnel = calcFunnel(role);
+  const stages = getVisibleStages(role.sourceType);
+  const rates  = getVisibleRates(role.sourceType);
+
+  const topVal       = funnel[stages[0]?.key] || 1;
+  const overallConv  = ((role.targetHires / topVal) * 100).toFixed(1);
+  const screensPerH  = (funnel.screens / role.targetHires).toFixed(1);
+
+  const addRole = () => {
+    const id = String(nextId);
+    setRoles(prev => [...prev, makeRole(id)]);
+    setSelId(id);
+    setNextId(n => n + 1);
+  };
+
+  const deleteRole = (id, e) => {
+    e.stopPropagation();
+    const rest = roles.filter(r => r.id !== id);
+    setRoles(rest);
+    if (selectedId === id) setSelId(rest[0]?.id || '');
+  };
+
+  const upRole = (field, value) =>
+    setRoles(prev => prev.map(r => r.id === role.id ? { ...r, [field]: value } : r));
+
+  const upRate = (key, value) =>
+    setRoles(prev => prev.map(r => r.id === role.id ? { ...r, rates: { ...r.rates, [key]: value } } : r));
+
+  const resetRates = () =>
+    setRoles(prev => prev.map(r => r.id === role.id ? { ...r, rates: { ...DEFAULT_RATES } } : r));
+
+  // ── Sidebar ──
+  const Sidebar = (
+    <div style={{
+      width: 230, background: 'white', borderRight: '1px solid #e2e8f0',
+      display: 'flex', flexDirection: 'column', flexShrink: 0, height: '100vh',
+      position: 'sticky', top: 0,
+    }}>
+      {/* Branding */}
+      <div style={{ padding: '18px 16px 14px', borderBottom: '1px solid #f1f5f9' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 9, flexShrink: 0,
+            background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
+          }}>🎯</div>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>Funnel Calculator</div>
+            <div style={{ fontSize: 11, color: '#94a3b8' }}>Blinq Talent</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Role list */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 10px' }}>
+        <div style={{
+          fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase',
+          letterSpacing: '0.08em', marginBottom: 8, paddingLeft: 4,
+        }}>
+          Roles ({roles.length})
+        </div>
+        {roles.map(r => (
+          <div
+            key={r.id}
+            onClick={() => setSelId(r.id)}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '8px 10px', borderRadius: 8, cursor: 'pointer', marginBottom: 3,
+              background: selectedId === r.id ? '#eef2ff' : 'transparent',
+              border: selectedId === r.id ? '1px solid #c7d2fe' : '1px solid transparent',
+              transition: 'all 0.12s',
+            }}
+          >
+            <div style={{ minWidth: 0 }}>
+              <div style={{
+                fontSize: 13, fontWeight: 600,
+                color: selectedId === r.id ? '#4338ca' : '#374151',
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              }}>{r.name}</div>
+              <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                {r.targetHires} hire{r.targetHires !== 1 ? 's' : ''} · {r.sourceType}
+              </div>
+            </div>
+            {roles.length > 1 && (
+              <button onClick={e => deleteRole(r.id, e)} style={{
+                background: 'none', border: 'none', fontSize: 16, color: '#cbd5e1',
+                padding: '0 0 0 4px', lineHeight: 1, flexShrink: 0,
+              }}>×</button>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Add role */}
+      <div className="no-print" style={{ padding: '8px 10px 16px' }}>
+        <button onClick={addRole} style={{
+          width: '100%', padding: '9px', borderRadius: 8,
+          border: '1.5px dashed #cbd5e1', background: 'transparent',
+          fontSize: 13, color: '#64748b', fontWeight: 500, transition: 'all 0.15s',
+        }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = '#6366f1'; e.currentTarget.style.color = '#4f46e5'; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.color = '#64748b'; }}
+        >
+          + Add Role
+        </button>
+      </div>
+    </div>
+  );
+
+  // ── Main ──
+  const Main = (
+    <div style={{ flex: 1, overflowY: 'auto', padding: 28 }}>
+      {/* Header row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <input
+            value={role.name}
+            onChange={e => upRole('name', e.target.value)}
+            style={{
+              fontSize: 24, fontWeight: 800, color: '#0f172a', background: 'transparent',
+              border: 'none', borderBottom: '2px solid transparent', padding: '2px 4px',
+              cursor: 'text', fontFamily: 'inherit', transition: 'border-color 0.15s',
+            }}
+            onFocus={e => e.target.style.borderBottomColor = '#6366f1'}
+            onBlur={e => e.target.style.borderBottomColor = 'transparent'}
+          />
+          <span style={{ fontSize: 12, color: '#cbd5e1', fontStyle: 'italic' }}>click to rename</span>
+        </div>
+        <div className="no-print" style={{ display: 'flex', gap: 8 }}>
+          <button onClick={() => {
+            const encoded = encodeState(roles);
+            if (!encoded) return;
+            const url = window.location.origin + window.location.pathname + '?state=' + encoded;
+            navigator.clipboard.writeText(url).then(() => {
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            });
+          }} style={{
+            padding: '7px 14px', borderRadius: 8, border: '1px solid #6366f1',
+            background: copied ? '#6366f1' : '#eef2ff', fontSize: 13,
+            color: copied ? 'white' : '#4f46e5', fontWeight: 500, transition: 'all 0.2s',
+          }}>{copied ? '✓ Copied!' : '🔗 Copy Link'}</button>
+          <button onClick={() => window.print()} style={{
+            padding: '7px 14px', borderRadius: 8, border: '1px solid #e2e8f0',
+            background: 'white', fontSize: 13, color: '#374151', fontWeight: 500,
+          }}>🖨️ Print</button>
+        </div>
+      </div>
+
+      {/* Two-column layout */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+
+        {/* ── LEFT column: inputs ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+          {/* Setup card */}
+          <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20 }}>
+            <h3 style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 18 }}>
+              Role Setup
+            </h3>
+            {/* Target hires */}
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ fontSize: 13, color: '#374151', fontWeight: 500, display: 'block', marginBottom: 8 }}>Target hires for this role</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {[[-1,'−'],[+1,'+']].map(([delta, sym], i) => i === 0 ? (<button key={i} onClick={() => upRole('targetHires', Math.max(1, role.targetHires + delta))} style={{width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', fontSize: 20, color: '#374151', lineHeight: 1}}>{sym}</button>) : null)}
+                <input type="number" min="1" max="50" value={role.targetHires} onChange={e => upRole('targetHires', Math.max(1, parseInt(e.target.value) || 1))} style={{width: 60, height: 32, border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 17, fontWeight: 800, color: '#4f46e5', textAlign: 'center', background: '#f8fafc'}} />
+                <button onClick={() => upRole('targetHires', Math.min(50, role.targetHires + 1))} style={{width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', fontSize: 20, color: '#374151', lineHeight: 1}}>+</button>
+                <span style={{fontSize: 13, color: '#64748b'}}>hire{role.targetHires !== 1 ? 's' : ''}</span>
+              </div>
+            </div>
+            {/* Sourcing method */}
+            <div style={{marginBottom: role.sourceType === 'both' ? 18 : 0}}>
+              <label style={{fontSize: 13, color: '#374151', fontWeight: 500, display: 'block', marginBottom: 8}}>Sourcing method</label>
+              <div style={{display: 'flex', gap: 6}}>
+                {[['outbound','📤 Outbound'],['apps','📋 Applications'],['both','⚡ Both']].map(([val, lbl]) => (
+                  <button key={val} onClick={() => upRole('sourceType', val)} style={{flex: 1, padding: '8px 4px', borderRadius: 8, fontSize: 12, fontWeight: 600, border: role.sourceType === val ? '1.5px solid #6366f1' : '1.5px solid #e2e8f0', background: role.sourceType === val ? '#eef2ff' : 'white', color: role.sourceType === val ? '#4338ca' : '#6b7280', transition: 'all 0.12s'}}>{lbl}</button>
+                ))}
+              </div>
+            </div>
+            {role.sourceType === 'both' && (<div><label style={{fontSize: 13, color: '#374151', display: 'block', marginBottom: 6}}>Screen mix:{'+ '}<strong style={{color: '#4f46e5'}}>{role.outboundSplit}% outbound</strong>{' / '}<strong style={{color: '#7c3aed'}}>{100-role.outboundSplit}% inbound</strong></label><input type="range" min={10} max={90} step={5} value={role.outboundSplit} onChange={e => upRole('outboundSplit', parseInt(e.target.value))} /></div>)}
+          </div>
+          <div style={{background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20}}>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18}}>
+              <h3 style={{fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em'}}>Conversion Rates</h3>
+              <button onClick={resetRates} style={{fontSize: 11, color: '#94a3b8', background: 'none', border: 'none', textDecoration: 'underline', cursor: 'pointer'}}>Reset defaults</button>
+            </div>
+            {rates.map(cfg => (<RateRow key={cfg.key} cfg={cfg} value={role.rates[cfg.key]} onChange={v => upRate(cfg.key, v)} />))}
+          </div>
+        </div>
+        <div style={{display: 'flex', flexDirection: 'column', gap: 20}}>
+          <div>
+            <h3 style={{fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12}}>Activity required to hit {role.targetHires} hire{role.targetHires !== 1 ? 's' : ''}</h3>
+            <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10}}>
+              {stages.map(s => funnel[s.key] > 0 && (<SummaryCard key={s.key} stage={s} value={funnel[s.key]} />))}
+            </div>
+          </div>
+          <div style={{background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20}}>
+            <h3 style={{fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16}}>Funnel Visualization</h3>
+            <FunnelViz stages={stages} funnel={funnel} />
+          </div>
+          <div style={{background: 'linear-gradient(135deg, #eef2ff 0%, #faf5ff 100%)', borderRadius: 12, border: '1px solid #e0e7ff', padding: 18}}>
+            <div style={{fontSize: 11, fontWeight: 700, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14}}>📊 Funnel Health</div>
+            <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14}}>
+              {[{label:'Overall conversion',value:`${overallConv}%`,sub:'of-funnel → hire'},{label:'Screens per hire',value:screensPerH,sub:'recruiter screens'},{label:'Finals per hire',value:(funnel.finals/role.targetHires).toFixed(1),sub:'final interviews'}].map(({ label, value, sub }) => (<div key={label}><div style={{fontSize: 11, color: '#94a3b8', marginBottom: 2}}>{label}</div><div style={{fontSize: 22, fontWeight: 800, color: '#4338ca', lineHeight: 1.1}}>{value}</div><div style={{fontSize: 11, color: '#94a3b8', marginTop: 2}}>{sub}</div></div>))}
+            </div>
+          </div>
+          <div style={{background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20}}>
+            <h3 style={{fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14}}>⏱ Weekly Pacing</h3>
+            <WeeklyPacing role={role} funnel={funnel} stages={stages} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+  return (<div style={{display: 'flex', minHeight: '100vh'}}>{\idebar}{Main}</div>);
+}
+
+function WeeklyPacing({ role, funnel, stages }) {
+  const [weeks, setWeeks] = useState(6);
+  const paceStages = stages.filter(s => ['outboundMsgs', 'appsReviewed', 'screens', 'tps'].includes(s.key));
+  return (<div><div style={{display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14}}><span style={{fontSize: 13, color: '#374151'}}>Fill timeline:</span><input type="number" min={1} max={52} value={weeks} onChange={e => setWeeks(Math.max(1, parseInt(e.target.value)||1))} style={{width: 52, padding: '4px 6px', border: '1px solid #d1d5db', borderRadius: 7, fontSize: 14, fontWeight: 700, color: '#4f46e5', textAlign: 'center', background: '#f9fafb'}} /><span style={{fontSize: 13, color: '#6b7280'}}>weeks</span></div><div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10}}>{poceStages.map(s => { const total=funnel[s.key]; if(!total)return null; const perWeek=Math.ceil(total/weeks); return (<div key={s.key} style={{background:'#f8fafc',borderRadius:8,border:'1px solid #e2e8f0'padding:'10px 12px'}}><div style={{fontSize:11,color:'#6b7280',marginBottom:2}}>{s.icon} {s.label}</div><div style={{fontSize:22,fontWeight:800,lineHeight:1.1,color:s.color}}>{fmt(perWeek)}</div><div style={{fontSize:11,color:'#94a3b8'}}>per week</div></div>);})}</div></div>);
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
