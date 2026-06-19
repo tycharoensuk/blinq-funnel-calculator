@@ -370,68 +370,197 @@ function App() {
             <h3 style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 18 }}>
               Role Setup
             </h3>
+
             {/* Target hires */}
             <div style={{ marginBottom: 20 }}>
-              <label style={{ fontSize: 13, color: '#374151', fontWeight: 500, display: 'block', marginBottom: 8 }}>Target hires for this role</label>
+              <label style={{ fontSize: 13, color: '#374151', fontWeight: 500, display: 'block', marginBottom: 8 }}>
+                Target hires for this role
+              </label>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                {[[-1,'−'],[+1,'+']].map(([delta, sym], i) => i === 0 ? (<button key={i} onClick={() => upRole('targetHires', Math.max(1, role.targetHires + delta))} style={{width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', fontSize: 20, color: '#374151', lineHeight: 1}}>{sym}</button>) : null)}
-                <input type="number" min="1" max="50" value={role.targetHires} onChange={e => upRole('targetHires', Math.max(1, parseInt(e.target.value) || 1))} style={{width: 60, height: 32, border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 17, fontWeight: 800, color: '#4f46e5', textAlign: 'center', background: '#f8fafc'}} />
-                <button onClick={() => upRole('targetHires', Math.min(50, role.targetHires + 1))} style={{width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0', background: 'white', fontSize: 20, color: '#374151', lineHeight: 1}}>+</button>
-                <span style={{fontSize: 13, color: '#64748b'}}>hire{role.targetHires !== 1 ? 's' : ''}</span>
+                {[[-1,'−'],[+1,'+']].map(([delta, sym], i) => i === 0 ? (
+                  <button key={i} onClick={() => upRole('targetHires', Math.max(1, role.targetHires + delta))} style={{
+                    width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0',
+                    background: 'white', fontSize: 20, color: '#374151', lineHeight: 1,
+                  }}>{sym}</button>
+                ) : null)}
+                <input
+                  type="number" min="1" max="50" value={role.targetHires}
+                  onChange={e => upRole('targetHires', Math.max(1, parseInt(e.target.value) || 1))}
+                  style={{
+                    width: 60, height: 32, border: '1px solid #e2e8f0', borderRadius: 8,
+                    fontSize: 17, fontWeight: 800, color: '#4f46e5', textAlign: 'center',
+                    background: '#f8fafc',
+                  }}
+                />
+                <button onClick={() => upRole('targetHires', Math.min(50, role.targetHires + 1))} style={{
+                  width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0',
+                  background: 'white', fontSize: 20, color: '#374151', lineHeight: 1,
+                }}>+</button>
+                <span style={{ fontSize: 13, color: '#64748b' }}>hire{role.targetHires !== 1 ? 's' : ''}</span>
               </div>
             </div>
+
             {/* Sourcing method */}
-            <div style={{marginBottom: role.sourceType === 'both' ? 18 : 0}}>
-              <label style={{fontSize: 13, color: '#374151', fontWeight: 500, display: 'block', marginBottom: 8}}>Sourcing method</label>
-              <div style={{display: 'flex', gap: 6}}>
+            <div style={{ marginBottom: role.sourceType === 'both' ? 18 : 0 }}>
+              <label style={{ fontSize: 13, color: '#374151', fontWeight: 500, display: 'block', marginBottom: 8 }}>
+                Sourcing method
+              </label>
+              <div style={{ display: 'flex', gap: 6 }}>
                 {[['outbound','📤 Outbound'],['apps','📋 Applications'],['both','⚡ Both']].map(([val, lbl]) => (
-                  <button key={val} onClick={() => upRole('sourceType', val)} style={{flex: 1, padding: '8px 4px', borderRadius: 8, fontSize: 12, fontWeight: 600, border: role.sourceType === val ? '1.5px solid #6366f1' : '1.5px solid #e2e8f0', background: role.sourceType === val ? '#eef2ff' : 'white', color: role.sourceType === val ? '#4338ca' : '#6b7280', transition: 'all 0.12s'}}>{lbl}</button>
+                  <button key={val} onClick={() => upRole('sourceType', val)} style={{
+                    flex: 1, padding: '8px 4px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                    border: role.sourceType === val ? '1.5px solid #6366f1' : '1.5px solid #e2e8f0',
+                    background: role.sourceType === val ? '#eef2ff' : 'white',
+                    color: role.sourceType === val ? '#4338ca' : '#6b7280',
+                    transition: 'all 0.12s',
+                  }}>{lbl}</button>
                 ))}
               </div>
             </div>
-            {role.sourceType === 'both' && (<div><label style={{fontSize: 13, color: '#374151', display: 'block', marginBottom: 6}}>Screen mix:{'+ '}<strong style={{color: '#4f46e5'}}>{role.outboundSplit}% outbound</strong>{' / '}<strong style={{color: '#7c3aed'}}>{100-role.outboundSplit}% inbound</strong></label><input type="range" min={10} max={90} step={5} value={role.outboundSplit} onChange={e => upRole('outboundSplit', parseInt(e.target.value))} /></div>)}
+
+            {/* Outbound split */}
+            {role.sourceType === 'both' && (
+              <div>
+                <label style={{ fontSize: 13, color: '#374151', display: 'block', marginBottom: 6 }}>
+                  Screen mix:{' '}
+                  <strong style={{ color: '#4f46e5' }}>{role.outboundSplit}% outbound</strong>
+                  {' / '}
+                  <strong style={{ color: '#7c3aed' }}>{100 - role.outboundSplit}% inbound</strong>
+                </label>
+                <input
+                  type="range" min={10} max={90} step={5} value={role.outboundSplit}
+                  onChange={e => upRole('outboundSplit', parseInt(e.target.value))}
+                />
+              </div>
+            )}
           </div>
-          <div style={{background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20}}>
-            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18}}>
-              <h3 style={{fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em'}}>Conversion Rates</h3>
-              <button onClick={resetRates} style={{fontSize: 11, color: '#94a3b8', background: 'none', border: 'none', textDecoration: 'underline', cursor: 'pointer'}}>Reset defaults</button>
+
+          {/* Conversion rates card */}
+          <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+              <h3 style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Conversion Rates
+              </h3>
+              <button onClick={resetRates} style={{
+                fontSize: 11, color: '#94a3b8', background: 'none', border: 'none',
+                textDecoration: 'underline', cursor: 'pointer',
+              }}>Reset defaults</button>
             </div>
-            {rates.map(cfg => (<RateRow key={cfg.key} cfg={cfg} value={role.rates[cfg.key]} onChange={v => upRate(cfg.key, v)} />))}
+            {rates.map(cfg => (
+              <RateRow key={cfg.key} cfg={cfg} value={role.rates[cfg.key]} onChange={v => upRate(cfg.key, v)} />
+            ))}
           </div>
         </div>
-        <div style={{display: 'flex', flexDirection: 'column', gap: 20}}>
+
+        {/* ── RIGHT column: output ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+          {/* Headline */}
           <div>
-            <h3 style={{fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12}}>Activity required to hit {role.targetHires} hire{role.targetHires !== 1 ? 's' : ''}</h3>
-            <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10}}>
-              {stages.map(s => funnel[s.key] > 0 && (<SummaryCard key={s.key} stage={s} value={funnel[s.key]} />))}
+            <h3 style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+              Activity required to hit {role.targetHires} hire{role.targetHires !== 1 ? 's' : ''}
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+              {stages.map(s => funnel[s.key] > 0 && (
+                <SummaryCard key={s.key} stage={s} value={funnel[s.key]} />
+              ))}
             </div>
           </div>
-          <div style={{background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20}}>
-            <h3 style={{fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16}}>Funnel Visualization</h3>
+
+          {/* Funnel viz */}
+          <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20 }}>
+            <h3 style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>
+              Funnel Visualization
+            </h3>
             <FunnelViz stages={stages} funnel={funnel} />
           </div>
-          <div style={{background: 'linear-gradient(135deg, #eef2ff 0%, #faf5ff 100%)', borderRadius: 12, border: '1px solid #e0e7ff', padding: 18}}>
-            <div style={{fontSize: 11, fontWeight: 700, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14}}>📊 Funnel Health</div>
-            <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14}}>
-              {[{label:'Overall conversion',value:`${overallConv}%`,sub:'of-funnel → hire'},{label:'Screens per hire',value:screensPerH,sub:'recruiter screens'},{label:'Finals per hire',value:(funnel.finals/role.targetHires).toFixed(1),sub:'final interviews'}].map(({ label, value, sub }) => (<div key={label}><div style={{fontSize: 11, color: '#94a3b8', marginBottom: 2}}>{label}</div><div style={{fontSize: 22, fontWeight: 800, color: '#4338ca', lineHeight: 1.1}}>{value}</div><div style={{fontSize: 11, color: '#94a3b8', marginTop: 2}}>{sub}</div></div>))}
+
+          {/* Health metrics */}
+          <div style={{
+            background: 'linear-gradient(135deg, #eef2ff 0%, #faf5ff 100%)',
+            borderRadius: 12, border: '1px solid #e0e7ff', padding: 18,
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14 }}>
+              📊 Funnel Health
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+              {[
+                { label: 'Overall conversion', value: `${overallConv}%`, sub: 'top-of-funnel → hire' },
+                { label: 'Screens per hire',   value: screensPerH,       sub: 'recruiter screens'    },
+                { label: 'Finals per hire',     value: (funnel.finals / role.targetHires).toFixed(1), sub: 'final interviews' },
+              ].map(({ label, value, sub }) => (
+                <div key={label}>
+                  <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 2 }}>{label}</div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: '#4338ca', lineHeight: 1.1 }}>{value}</div>
+                  <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{sub}</div>
+                </div>
+              ))}
             </div>
           </div>
-          <div style={{background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20}}>
-            <h3 style={{fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14}}>⏱ Weekly Pacing</h3>
+
+          {/* Weekly pacing helper */}
+          <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20 }}>
+            <h3 style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14 }}>
+              ⏱ Weekly Pacing
+            </h3>
             <WeeklyPacing role={role} funnel={funnel} stages={stages} />
           </div>
         </div>
       </div>
     </div>
   );
-  return (<div style={{display: 'flex', minHeight: '100vh'}}>{\idebar}{Main}</div>);
+
+  return (
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+      {Sidebar}
+      {Main}
+    </div>
+  );
 }
+
+// ─── Weekly Pacing Component ─────────────────────────────────────────────────
 
 function WeeklyPacing({ role, funnel, stages }) {
   const [weeks, setWeeks] = useState(6);
+
   const paceStages = stages.filter(s => ['outboundMsgs', 'appsReviewed', 'screens', 'tps'].includes(s.key));
-  return (<div><div style={{display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14}}><span style={{fontSize: 13, color: '#374151'}}>Fill timeline:</span><input type="number" min={1} max={52} value={weeks} onChange={e => setWeeks(Math.max(1, parseInt(e.target.value)||1))} style={{width: 52, padding: '4px 6px', border: '1px solid #d1d5db', borderRadius: 7, fontSize: 14, fontWeight: 700, color: '#4f46e5', textAlign: 'center', background: '#f9fafb'}} /><span style={{fontSize: 13, color: '#6b7280'}}>weeks</span></div><div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10}}>{poceStages.map(s => { const total=funnel[s.key]; if(!total)return null; const perWeek=Math.ceil(total/weeks); return (<div key={s.key} style={{background:'#f8fafc',borderRadius:8,border:'1px solid #e2e8f0'padding:'10px 12px'}}><div style={{fontSize:11,color:'#6b7280',marginBottom:2}}>{s.icon} {s.label}</div><div style={{fontSize:22,fontWeight:800,lineHeight:1.1,color:s.color}}>{fmt(perWeek)}</div><div style={{fontSize:11,color:'#94a3b8'}}>per week</div></div>);})}</div></div>);
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+        <span style={{ fontSize: 13, color: '#374151' }}>Fill timeline:</span>
+        <input
+          type="number" min={1} max={52} value={weeks}
+          onChange={e => setWeeks(Math.max(1, parseInt(e.target.value) || 1))}
+          style={{
+            width: 52, padding: '4px 6px', border: '1px solid #d1d5db',
+            borderRadius: 7, fontSize: 14, fontWeight: 700, color: '#4f46e5',
+            textAlign: 'center', background: '#f9fafb',
+          }}
+        />
+        <span style={{ fontSize: 13, color: '#6b7280' }}>weeks</span>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+        {paceStages.map(s => {
+          const total = funnel[s.key];
+          if (!total) return null;
+          const perWeek = Math.ceil(total / weeks);
+          return (
+            <div key={s.key} style={{
+              background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', padding: '10px 12px',
+            }}>
+              <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 2 }}>{s.icon} {s.label}</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: s.color }}>{fmt(perWeek)}</div>
+              <div style={{ fontSize: 11, color: '#94a3b8' }}>per week</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
+
+// ─── Mount ───────────────────────────────────────────────────────────────────
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 </script>
