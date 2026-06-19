@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Recruiting Funnel Calculator Â· Blinq Talent</title>
+  <title>Recruiting Funnel Calculator · Blinq Talent</title>
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
@@ -30,25 +30,25 @@
 <script type="text/babel">
 const { useState, useCallback } = React;
 
-// âââ Config âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─── Config ─────────────────────────────────────────────────────────────────
 
 const STAGE_CONFIG = [
-  { key: 'outboundMsgs', label: 'Outbound Messages',     icon: 'ð¤', color: '#1e1b4b', source: 'outbound' },
-  { key: 'appsReviewed', label: 'Applications Reviewed', icon: 'ð', color: '#312e81', source: 'apps'     },
-  { key: 'screens',      label: 'Recruiter Screens',     icon: 'ð', color: '#3730a3'                     },
-  { key: 'tps',          label: 'Team Phone Screens',    icon: 'ð¥', color: '#4338ca'                     },
-  { key: 'deepDives',    label: 'Deep Dives',            icon: 'ð', color: '#4f46e5'                     },
-  { key: 'finals',       label: 'Final Interviews',      icon: 'â­', color: '#6366f1'                     },
-  { key: 'hires',        label: 'Hires',                 icon: 'ð', color: '#818cf8'                     },
+  { key: 'outboundMsgs', label: 'Outbound Messages',     icon: '📤', color: '#1e1b4b', source: 'outbound' },
+  { key: 'appsReviewed', label: 'Applications Reviewed', icon: '📋', color: '#312e81', source: 'apps'     },
+  { key: 'screens',      label: 'Recruiter Screens',     icon: '📞', color: '#3730a3'                     },
+  { key: 'tps',          label: 'Team Phone Screens',    icon: '👥', color: '#4338ca'                     },
+  { key: 'deepDives',    label: 'Deep Dives',            icon: '🔍', color: '#4f46e5'                     },
+  { key: 'finals',       label: 'Final Interviews',      icon: '⭐', color: '#6366f1'                     },
+  { key: 'hires',        label: 'Hires',                 icon: '🎉', color: '#818cf8'                     },
 ];
 
 const RATE_CONFIG = [
-  { key: 'outboundToScreen', label: 'Outbound â Recruiter Screen',    bench: '8â15%',   tip: 'Response + qualification rate from outbound messages', source: 'outbound', min: 1, max: 50  },
-  { key: 'appToScreen',      label: 'Application â Recruiter Screen', bench: '15â30%',  tip: '% of reviewed applications that book a screen',         source: 'apps',     min: 1, max: 80  },
-  { key: 'screenToTps',      label: 'Screen â Team Phone Screen',     bench: '35â50%',  tip: '% of recruiter screens advancing to TPS',               min: 1, max: 100 },
-  { key: 'tpsToDeepDive',    label: 'TPS â Deep Dive',                bench: '40â60%',  tip: '% of TPS advancing to Deep Dive',                       min: 1, max: 100 },
-  { key: 'deepDiveToFinal',  label: 'Deep Dive â Final',              bench: '50â70%',  tip: '% of Deep Dives advancing to Final Interview',          min: 1, max: 100 },
-  { key: 'finalToOffer',     label: 'Final â Offer',                  bench: '50â75%',  tip: '% of Final Interviews resulting in an accepted offer',   min: 1, max: 100 },
+  { key: 'outboundToScreen', label: 'Outbound → Recruiter Screen',    bench: '8–15%',   tip: 'Response + qualification rate from outbound messages', source: 'outbound', min: 1, max: 50  },
+  { key: 'appToScreen',      label: 'Application → Recruiter Screen', bench: '15–30%',  tip: '% of reviewed applications that book a screen',         source: 'apps',     min: 1, max: 80  },
+  { key: 'screenToTps',      label: 'Screen → Team Phone Screen',     bench: '35–50%',  tip: '% of recruiter screens advancing to TPS',               min: 1, max: 100 },
+  { key: 'tpsToDeepDive',    label: 'TPS → Deep Dive',                bench: '40–60%',  tip: '% of TPS advancing to Deep Dive',                       min: 1, max: 100 },
+  { key: 'deepDiveToFinal',  label: 'Deep Dive → Final',              bench: '50–70%',  tip: '% of Deep Dives advancing to Final Interview',          min: 1, max: 100 },
+  { key: 'finalToOffer',     label: 'Final → Offer',                  bench: '50–75%',  tip: '% of Final Interviews resulting in an accepted offer',   min: 1, max: 100 },
 ];
 
 const DEFAULT_RATES = { outboundToScreen: 10, appToScreen: 20, screenToTps: 40, tpsToDeepDive: 50, deepDiveToFinal: 60, finalToOffer: 65 };
@@ -61,7 +61,7 @@ const makeRole = (id, name = 'New Role') => ({
   rates: { ...DEFAULT_RATES },
 });
 
-// âââ Calculator ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─── Calculator ──────────────────────────────────────────────────────────────
 
 function calcFunnel(role) {
   const { targetHires, sourceType, outboundSplit, rates: r } = role;
@@ -87,7 +87,7 @@ function calcFunnel(role) {
   };
 }
 
-// âââ Helpers âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const fmt = n => n.toLocaleString();
 
@@ -102,7 +102,7 @@ function getVisibleRates(sourceType) {
   return RATE_CONFIG.filter(r => !r.source || r.source === sourceType || sourceType === 'both');
 }
 
-// âââ Sub-components ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─── Sub-components ──────────────────────────────────────────────────────────
 
 function RateRow({ cfg, value, onChange }) {
   return (
@@ -180,7 +180,7 @@ function FunnelViz({ stages, funnel }) {
   );
 }
 
-// âââ URL State ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─── URL State ───────────────────────────────────────────────────────────────
 
 function encodeState(roles) {
   try { return btoa(unescape(encodeURIComponent(JSON.stringify(roles)))); } catch(e) { return null; }
@@ -200,7 +200,7 @@ function loadInitialRoles() {
   return [makeRole('1', 'Senior Engineer')];
 }
 
-// âââ Main App ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─── Main App ────────────────────────────────────────────────────────────────
 
 function App() {
   const initRoles = loadInitialRoles();
@@ -241,7 +241,7 @@ function App() {
   const resetRates = () =>
     setRoles(prev => prev.map(r => r.id === role.id ? { ...r, rates: { ...DEFAULT_RATES } } : r));
 
-  // ââ Sidebar ââ
+  // ── Sidebar ──
   const Sidebar = (
     <div style={{
       width: 230, background: 'white', borderRight: '1px solid #e2e8f0',
@@ -255,7 +255,7 @@ function App() {
             width: 32, height: 32, borderRadius: 9, flexShrink: 0,
             background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
-          }}>ð¯</div>
+          }}>🎯</div>
           <div>
             <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>Funnel Calculator</div>
             <div style={{ fontSize: 11, color: '#94a3b8' }}>Blinq Talent</div>
@@ -290,14 +290,14 @@ function App() {
                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}>{r.name}</div>
               <div style={{ fontSize: 11, color: '#94a3b8' }}>
-                {r.targetHires} hire{r.targetHires !== 1 ? 's' : ''} Â· {r.sourceType}
+                {r.targetHires} hire{r.targetHires !== 1 ? 's' : ''} · {r.sourceType}
               </div>
             </div>
             {roles.length > 1 && (
               <button onClick={e => deleteRole(r.id, e)} style={{
                 background: 'none', border: 'none', fontSize: 16, color: '#cbd5e1',
                 padding: '0 0 0 4px', lineHeight: 1, flexShrink: 0,
-              }}>Ã</button>
+              }}>×</button>
             )}
           </div>
         ))}
@@ -319,7 +319,7 @@ function App() {
     </div>
   );
 
-  // ââ Main ââ
+  // ── Main ──
   const Main = (
     <div style={{ flex: 1, overflowY: 'auto', padding: 28 }}>
       {/* Header row */}
@@ -351,18 +351,18 @@ function App() {
             padding: '7px 14px', borderRadius: 8, border: '1px solid #6366f1',
             background: copied ? '#6366f1' : '#eef2ff', fontSize: 13,
             color: copied ? 'white' : '#4f46e5', fontWeight: 500, transition: 'all 0.2s',
-          }}>{copied ? 'â Copied!' : 'ð Copy Link'}</button>
+          }}>{copied ? '✓ Copied!' : '🔗 Copy Link'}</button>
           <button onClick={() => window.print()} style={{
             padding: '7px 14px', borderRadius: 8, border: '1px solid #e2e8f0',
             background: 'white', fontSize: 13, color: '#374151', fontWeight: 500,
-          }}>ð¨ï¸ Print</button>
+          }}>🖨️ Print</button>
         </div>
       </div>
 
       {/* Two-column layout */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
 
-        {/* ââ LEFT column: inputs ââ */}
+        {/* ── LEFT column: inputs ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
           {/* Setup card */}
@@ -377,7 +377,7 @@ function App() {
                 Target hires for this role
               </label>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                {[[-1,'â'],[+1,'+']].map(([delta, sym], i) => i === 0 ? (
+                {[[-1,'−'],[+1,'+']].map(([delta, sym], i) => i === 0 ? (
                   <button key={i} onClick={() => upRole('targetHires', Math.max(1, role.targetHires + delta))} style={{
                     width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0',
                     background: 'white', fontSize: 20, color: '#374151', lineHeight: 1,
@@ -406,7 +406,7 @@ function App() {
                 Sourcing method
               </label>
               <div style={{ display: 'flex', gap: 6 }}>
-                {[['outbound','ð¤ Outbound'],['apps','ð Applications'],['both','â¡ Both']].map(([val, lbl]) => (
+                {[['outbound','📤 Outbound'],['apps','📋 Applications'],['both','⚡ Both']].map(([val, lbl]) => (
                   <button key={val} onClick={() => upRole('sourceType', val)} style={{
                     flex: 1, padding: '8px 4px', borderRadius: 8, fontSize: 12, fontWeight: 600,
                     border: role.sourceType === val ? '1.5px solid #6366f1' : '1.5px solid #e2e8f0',
@@ -452,7 +452,7 @@ function App() {
           </div>
         </div>
 
-        {/* ââ RIGHT column: output ââ */}
+        {/* ── RIGHT column: output ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
           {/* Headline */}
@@ -481,11 +481,11 @@ function App() {
             borderRadius: 12, border: '1px solid #e0e7ff', padding: 18,
           }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14 }}>
-              ð Funnel Health
+              📊 Funnel Health
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
               {[
-                { label: 'Overall conversion', value: `${overallConv}%`, sub: 'top-of-funnel â hire' },
+                { label: 'Overall conversion', value: `${overallConv}%`, sub: 'top-of-funnel → hire' },
                 { label: 'Screens per hire',   value: screensPerH,       sub: 'recruiter screens'    },
                 { label: 'Finals per hire',     value: (funnel.finals / role.targetHires).toFixed(1), sub: 'final interviews' },
               ].map(({ label, value, sub }) => (
@@ -501,7 +501,7 @@ function App() {
           {/* Weekly pacing helper */}
           <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20 }}>
             <h3 style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14 }}>
-              â± Weekly Pacing
+              ⏱ Weekly Pacing
             </h3>
             <WeeklyPacing role={role} funnel={funnel} stages={stages} />
           </div>
@@ -518,7 +518,7 @@ function App() {
   );
 }
 
-// âââ Weekly Pacing Component âââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─── Weekly Pacing Component ─────────────────────────────────────────────────
 
 function WeeklyPacing({ role, funnel, stages }) {
   const [weeks, setWeeks] = useState(6);
@@ -560,7 +560,7 @@ function WeeklyPacing({ role, funnel, stages }) {
   );
 }
 
-// âââ Mount âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─── Mount ───────────────────────────────────────────────────────────────────
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 </script>
